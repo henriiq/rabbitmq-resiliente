@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+/RabbitMQResiliente/RabbitMQResiliente/obj
+/RabbitMQResiliente/RabbitMQResiliente/bin/Debug/netcoreapp3.1
+/RabbitMQResiliente/.vs/RabbitMQResiliente/v16
