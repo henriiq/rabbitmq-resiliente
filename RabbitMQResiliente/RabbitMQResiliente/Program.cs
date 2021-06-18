@@ -41,16 +41,10 @@ namespace RabbitMQResiliente
 
                     await Task.Delay(3000);
                     return MessageResult.Retry;
-                }, 
-                enderecoRetry: new EnderecoPublicacao(retry_x, retry_r))
-
-                .Consume<string>(q, onMessage: async (m) =>
-                {
-                    Console.WriteLine($"B - {m}");
-
-                    await Task.Delay(1000);
-                    return MessageResult.Retry;
-                })
+                },
+                onError: (x) => { Console.WriteLine(x); },
+                enderecoRetry: new EnderecoPublicacao(retry_x, retry_r),
+                qtdMensagensSimultaneas: 100)
 
                 .Retry<string>(retry_q, onMessage: async (m) =>
                 {
@@ -58,7 +52,10 @@ namespace RabbitMQResiliente
 
                     await Task.Delay(300);
                     return MessageResult.Retry;
-                }, maxRetry: 100);
+                },
+                onError: (x) => { Console.WriteLine(x); },
+                maxRetry: 100,
+                qtdMensagensSimultaneas: 1);
 
 
             Console.ReadKey();

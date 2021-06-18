@@ -28,38 +28,76 @@ namespace RabbitMQResiliente
         public RabbitMQBoilerPlate Consume<T>(
             string fila,
             Func<object, Task<MessageResult>> onMessage,
-            EnderecoPublicacao enderecoRetry = null)
+            Action<Exception> onError = null,
+            EnderecoPublicacao enderecoRetry = null,
+            ushort qtdMensagensSimultaneas = 1)
         {
-            _consumer.Consume<T>(fila, onMessage, enderecoRetry);
+            onError ??= x => Console.WriteLine(x);
+            _consumer.Consume<T>(
+                fila,
+                onMessage,
+                onError,
+                enderecoRetry,
+                qtdMensagensSimultaneas);
+
             return this;
         }
 
         public RabbitMQBoilerPlate Consume<T>(
             string fila,
             Func<object, MessageResult> onMessage,
-            EnderecoPublicacao enderecoRetry = null)
+            Action<Exception> onError = null,
+            EnderecoPublicacao enderecoRetry = null,
+            ushort qtdMensagensSimultaneas = 1)
         {
-            Consume<T>(fila, (m) => Task.FromResult(onMessage(m)), enderecoRetry);
+            onError ??= x => Console.WriteLine(x);
+            Consume<T>(
+                fila,
+                (m) => Task.FromResult(onMessage(m)),
+                onError,
+                enderecoRetry,
+                qtdMensagensSimultaneas);
+
             return this;
         }
 
         public RabbitMQBoilerPlate Retry<T>(
             string fila,
             Func<object, Task<MessageResult>> onMessage,
+            Action<Exception> onError = null,
             int maxRetry = 5,
-            string retryHeader = "x-retry-count")
+            string retryHeader = "x-retry-count",
+            ushort qtdMensagensSimultaneas = 1)
         {
-            _consumerRetry.Retry<T>(fila, onMessage, maxRetry, retryHeader);
+            onError ??= x => Console.WriteLine(x);
+            _consumerRetry.Retry<T>(
+                fila,
+                onMessage,
+                onError,
+                maxRetry,
+                retryHeader,
+                qtdMensagensSimultaneas);
+
             return this;
         }
 
         public RabbitMQBoilerPlate Retry<T>(
             string fila,
             Func<object, MessageResult> onMessage,
+            Action<Exception> onError = null,
             int maxRetry = 5,
-            string retryHeader = "x-retry-count")
+            string retryHeader = "x-retry-count",
+            ushort qtdMensagensSimultaneas = 1)
         {
-            Retry<T>(fila, (m) => Task.FromResult(onMessage(m)), maxRetry, retryHeader);
+            onError ??= x => Console.WriteLine(x);
+            Retry<T>(
+                fila,
+                (m) => Task.FromResult(onMessage(m)),
+                onError,
+                maxRetry,
+                retryHeader,
+                qtdMensagensSimultaneas);
+
             return this;
         }
     }

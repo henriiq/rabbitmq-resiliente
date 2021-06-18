@@ -13,7 +13,9 @@ namespace RabbitMQResiliente
         private readonly IConnection _connection;
         private readonly RabbitMQBoilerPlatePublisher _publisher;
 
-        public RabbitMQBoilerPlateConsumerRetry(IConnection connection, RabbitMQBoilerPlatePublisher publisher)
+        public RabbitMQBoilerPlateConsumerRetry(
+            IConnection connection, 
+            RabbitMQBoilerPlatePublisher publisher)
         {
             _connection = connection;
             _publisher = publisher;
@@ -22,8 +24,10 @@ namespace RabbitMQResiliente
         public void Retry<T>(
                 string fila,
                 Func<object, Task<MessageResult>> onMessage,
+                Action<Exception> onError,
                 int maxRetry,
-                string retryHeader)
+                string retryHeader,
+                ushort qtdMensagensSimultaneas)
         {
             var model = _connection.CreateModel();
             var consumer = new EventingBasicConsumer(model); 
@@ -83,11 +87,11 @@ namespace RabbitMQResiliente
                 }
                 catch (Exception x)
                 {
-                    Console.WriteLine(x);
+                    onError(x);
                 }
             };
 
-            model.BasicQos(0, 10, false);
+            model.BasicQos(0, qtdMensagensSimultaneas, false);
             model.BasicConsume(fila, false, consumer);
         }
     }

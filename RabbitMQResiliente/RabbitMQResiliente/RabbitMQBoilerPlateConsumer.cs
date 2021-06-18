@@ -21,7 +21,9 @@ namespace RabbitMQResiliente
         public void Consume<T>(
             string fila,
             Func<object, Task<MessageResult>> onMessage,
-            EnderecoPublicacao enderecoRetry = null)
+            Action<Exception> onError,
+            EnderecoPublicacao enderecoRetry,
+            ushort qtdMensagensSimultaneas)
         {
             var model = _connection.CreateModel();
             var consumer = new EventingBasicConsumer(model);
@@ -49,6 +51,16 @@ namespace RabbitMQResiliente
                         r = await onMessage(entidade);
                     }
 
+                    if (r == MessageResult.Retry && enderecoRetry == null)
+                    {
+                        onError(
+                            new Exception(
+                                $"O processamento da mensagem retornou retentativa mas o endereco de retentativa nao foi configurado." +
+                                $"MSG: {entidade}"));
+
+                        r = MessageResult.Reject;
+                    }
+
                     switch (r)
                     {
                         case MessageResult.Ok:
@@ -59,16 +71,17 @@ namespace RabbitMQResiliente
                             _publisher.PublicaMensagem(enderecoRetry, entidade, basicProp);
                             break;
                         case MessageResult.Reject:
+                            model.BasicReject(deliveryTag, false);
                             break;
                     }
                 }
                 catch (Exception x)
                 {
-                    Console.WriteLine(x);
+                    onError(x);
                 }
             };
 
-            model.BasicQos(0, 10, false);
+            model.BasicQos(0, qtdMensagensSimultaneas, false);
             model.BasicConsume(fila, false, consumer);
         }
     }
