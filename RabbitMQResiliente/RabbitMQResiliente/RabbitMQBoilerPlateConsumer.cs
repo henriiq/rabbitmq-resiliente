@@ -2,7 +2,6 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -29,21 +28,13 @@ namespace RabbitMQResiliente
 
             consumer.Received += async (s, e) =>
             {
+                MessageResult r;
+                object entidade;
+
                 try
                 {
                     var deliveryTag = e.DeliveryTag;
-
-                    MessageResult r;
-                    IBasicProperties basicProp;
-                    object entidade;
-
-                    if (e.BasicProperties == null)
-                        e.BasicProperties = model.CreateBasicProperties();
-
-                    if (e.BasicProperties != null && !e.BasicProperties.IsHeadersPresent())
-                        e.BasicProperties.Headers = new Dictionary<string, object>();
-
-                    basicProp = e.BasicProperties;
+                    var basicProp = e.BasicProperties;
 
                     if (typeof(T) == typeof(string))
                     {

@@ -30,13 +30,13 @@ namespace RabbitMQResiliente
 
             consumer.Received += async (s, e) =>
             {
+                IBasicProperties basicProp;
+                MessageResult r;
+                object entidade;
+
                 try
                 {
                     var deliveryTag = e.DeliveryTag;
-
-                    MessageResult r;
-                    IBasicProperties basicProp;
-                    object entidade;
 
                     if (e.BasicProperties == null)
                         e.BasicProperties = model.CreateBasicProperties();
